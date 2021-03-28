@@ -1,0 +1,75 @@
+- hosts: localhost
+  tasks: 
+  - name: "Configured yum repo for Docker"
+    yum_repository:
+            baseurl: "https://download.docker.com/linux/centos/7/x86_64/stable/"
+            name: "docker-repo"
+            description: "docker-dvd"
+            gpgcheck: no
+
+  - name: "Docker Installation"
+    package:
+            name: docker-ce-18.09.1-3.el7.x86_64
+            state: present
+
+  - name: "Installing Docker SDK for Ansible" 
+    pip:
+            name: docker
+            state: present
+
+  - name: "Starting Docker Service"          
+    service:
+            name: docker
+            state: started
+            enabled: yes        
+
+  - name: "Download HTTPD Image from DockerHub"          
+    docker_image:
+            name: saurabh6/centos_ssh
+            source: pull
+            state: present
+
+  - name: "Launch Docker Container"          
+    docker_container:
+            name: "web-in-docker"
+            image: saurabh6/centos_ssh
+            state: started
+            interactive: yes
+            detach: yes
+            tty: yes
+            ports:
+                    - 8890:80
+
+  - name: "Get infos on Container"
+    community.general.docker_container_info:
+            name: "web-in-docker"
+    register: result
+
+  - debug:
+      var: result.container.NetworkSettings.IPAddress
+
+  - name: "Docker Container IP Update In Inventory File"
+    blockinfile:
+            dest: "/root/inventory.txt"
+            block: |
+                    [docker_container]
+                    {{ result['container']['NetworkSettings']['IPAddress'] }} ansible_user=root ansible_ssh_pass=saurabh ansible_connection=ssh
+
+
+
+            
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
