@@ -1,0 +1,15 @@
+- hosts: docker_container
+  tasks:
+  - name: "Installing HTTPD Package"
+    package:
+            name: httpd
+            state: present
+
+  - name: "Copy File"
+    copy:
+            src: index.html
+            dest: /var/www/html
+
+  - name: "Starting HTTPD Service"
+    command: /usr/sbin/httpd
+
